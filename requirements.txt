@@ -1,0 +1,19 @@
+# Core data handling libraries
+pandas
+numpy
+
+# Visualization libraries
+matplotlib
+seaborn
+plotly
+
+# Machine learning libraries
+scikit-learn
+xgboost
+
+# Model Evaluation & Optimisation
+scipy
+optuna
+
+#unit testing
+pytest
