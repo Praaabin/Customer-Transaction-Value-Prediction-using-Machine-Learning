@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 from datetime import timedelta
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
@@ -21,9 +23,9 @@ def engineer_features(data, cache_path='data/processed/featured_data.csv', force
     # -------------------------------------------------------------------------------------
     # 0. Use cached result if available and not forced to recompute
     # -------------------------------------------------------------------------------------
-    if os.path.exists(cache_path) and not force_recompute:
-        print(f"✅ Using cached featured dataset: {cache_path}")
-        return pd.read_csv(cache_path)
+    # if os.path.exists(cache_path) and not force_recompute:
+    #     print(f"✅ Using cached featured dataset: {cache_path}")
+    #     return pd.read_csv(cache_path)
 
     print("\n=== FEATURE ENGINEERING ===")
     df = data.copy()
@@ -54,7 +56,7 @@ def engineer_features(data, cache_path='data/processed/featured_data.csv', force
         'InvoiceDate': lambda x: (reference_date - x.max()).days,
         'InvoiceNo': 'nunique',
         'TotalPrice': 'sum'
-    }).rename(columns={'InvoiceDate': 'Recency', 'InvoiceNo': 'Frequency', 'TotalPrice': 'TotalSpend'})
+    }).rename(columns={'InvoiceDate': 'Recency', 'InvoiceNo': 'Frequency', 'TotalPrice': 'Monetary'})
 
     customer_metrics = df.groupby('CustomerID').agg({
         'BasketSize': 'mean',
@@ -80,6 +82,34 @@ def engineer_features(data, cache_path='data/processed/featured_data.csv', force
     customer_features['PurchaseFrequency30Days'] = 30 / customer_features['AvgDaysBetweenPurchases'].replace(0, 30)
 
     df = df.merge(customer_features.reset_index(), on='CustomerID', how='left')
+
+    # -------------------------------------------------------------------------------------
+    # RFM Visualizations
+    # -------------------------------------------------------------------------------------
+    print("\n📊 RFM Plots")
+    rfm_plot_df = customer_features[['Recency', 'Frequency', 'Monetary']].dropna()
+
+    # Histogram
+    plt.figure(figsize=(15, 4))
+    for i, col in enumerate(['Recency', 'Frequency', 'Monetary']):
+        plt.subplot(1, 3, i + 1)
+        sns.histplot(rfm_plot_df[col], kde=True, bins=30)
+        plt.title(f'{col} Distribution')
+        plt.xlabel(col)
+        plt.ylabel('Count')
+    plt.tight_layout()
+    plt.show()
+
+    # Scatter Plot
+    plt.figure(figsize=(8, 6))
+    sns.scatterplot(x='Frequency', y='Monetary', data=rfm_plot_df, hue='Recency', palette='cool', alpha=0.7)
+    plt.title('Frequency vs Monetary (colored by Recency)')
+    plt.xlabel('Frequency')
+    plt.ylabel('Monetary')
+    plt.legend(title='Recency')
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
 
     # -------------------------------------------------------------------------------------
     # 3. Temporal Features
