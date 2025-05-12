@@ -23,9 +23,9 @@ def engineer_features(data, cache_path='data/processed/featured_data.csv', force
     # -------------------------------------------------------------------------------------
     # 0. Use cached result if available and not forced to recompute
     # -------------------------------------------------------------------------------------
-    # if os.path.exists(cache_path) and not force_recompute:
-    #     print(f"✅ Using cached featured dataset: {cache_path}")
-    #     return pd.read_csv(cache_path)
+    if os.path.exists(cache_path) and not force_recompute:
+        print(f"✅ Using cached featured dataset: {cache_path}")
+        return pd.read_csv(cache_path)
 
     print("\n=== FEATURE ENGINEERING ===")
     df = data.copy()
